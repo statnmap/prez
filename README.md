@@ -10,6 +10,7 @@ Here I store my presentation in conferences as PDF.
     
       - See this blog post:
         <https://rtask.thinkr.fr/rmd-first-when-development-starts-with-documentation>
+      - Watch video on Youtube: <https://youtu.be/cB1BCxFbhtk>
 
   - [2019-02 - Everything but maps with spatial tools - SatRday Paris
     (EN)](https://github.com/statnmap/prez/blob/master/2019-02-22_SatRdays_Paris.pdf)

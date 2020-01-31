@@ -5,6 +5,13 @@
 
 Here I store my presentation in conferences as PDF.
 
+  - [2020-02 - Transforming scattered analyses into a documented,
+    reproducible and shareable workflow - FOSDEM
+    Brussels](https://github.com/statnmap/prez/blob/master/2020-02_FOSDEM_Rochette_prez.pdf)
+    
+      - See related blog post (FR) :
+        <https://thinkr.fr/transformer-plusieurs-scripts-eparpilles-en-beau-package-r/>
+
   - [2019-07 - The “Rmd first” method: when projects start with
     documentation](https://github.com/statnmap/prez/blob/master/2019-07_useR_Toulouse.pdf)
     

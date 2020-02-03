@@ -9,6 +9,8 @@ Here I store my presentation in conferences as PDF.
     reproducible and shareable workflow - FOSDEM
     Brussels](https://github.com/statnmap/prez/blob/master/2020-02_FOSDEM_Rochette_prez.pdf)
     
+      - Watch video at FOSDEM 2020: <https://video.fosdem.org/2020/AW1.126/open_research_shareable_workflow.mp4>
+    
       - See related blog post (FR) :
         <https://thinkr.fr/transformer-plusieurs-scripts-eparpilles-en-beau-package-r/>
 

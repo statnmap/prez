@@ -5,6 +5,10 @@
 
 Here I store my presentations in conferences as PDF.
 
+  - [2020-10 - Development workflow at ThinkR: PROPRE, DataOps and
+    DevOps workflows -
+    ecoinfoFAIR2020](https://github.com/statnmap/prez/blob/master/2020-10-ThinkR-development-workflow.pdf)
+
   - [2020-02 - Transforming scattered analyses into a documented,
     reproducible and shareable workflow - FOSDEM
     Brussels](https://github.com/statnmap/prez/blob/master/2020-02_FOSDEM_Rochette_prez.pdf)
@@ -15,7 +19,8 @@ Here I store my presentations in conferences as PDF.
         <https://thinkr.fr/transformer-plusieurs-scripts-eparpilles-en-beau-package-r/>
 
   - [2019-07 - The “Rmd first” method: when projects start with
-    documentation - useR Toulouse](https://github.com/statnmap/prez/blob/master/2019-07_useR_Toulouse.pdf)
+    documentation - useR
+    Toulouse](https://github.com/statnmap/prez/blob/master/2019-07_useR_Toulouse.pdf)
     
       - See this blog post:
         <https://rtask.thinkr.fr/rmd-first-when-development-starts-with-documentation>

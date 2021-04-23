@@ -15,6 +15,12 @@ knitr::opts_chunk$set(
 
 Here I store my presentations in conferences as PDF.
 
+- [2021-04 - How to build a package with the Rmd first method? - Meetup R Lille](https://github.com/statnmap/prez/blob/master/2021-04-how-to-build-package-rmd-first-fusen.pdf)
+  + Package build during presentation : [{squirrels.fusen}](https://github.com/statnmap/squirrels.fusen)
+  + List of questions and answers on HackMd : []()
+  + Watch video on Youtube : []()
+  + Related package presented : [{fusen}](https://github.com/thinkr-open/fusen)
+
 - [2020-10 - Development workflow at ThinkR: PROPRE, DataOps and DevOps workflows - ecoinfoFAIR2020](https://github.com/statnmap/prez/blob/master/2020-10-ThinkR-development-workflow.pdf)
 
 - [2020-02 - Transforming scattered analyses into a documented, reproducible and shareable workflow - FOSDEM Brussels](https://github.com/statnmap/prez/blob/master/2020-02_FOSDEM_Rochette_prez.pdf)

@@ -5,34 +5,45 @@
 
 Here I store my presentations in conferences as PDF.
 
-  - [2020-10 - Development workflow at ThinkR: PROPRE, DataOps and
+-   [2021-04 - How to build a package with the Rmd first method? -
+    Meetup R
+    Lille](https://github.com/statnmap/prez/blob/master/2021-04-how-to-build-package-rmd-first-fusen.pdf)
+
+    -   Package build during presentation :
+        [{squirrels.fusen}](https://github.com/statnmap/squirrels.fusen)
+    -   List of questions and answers on HackMd : []()
+    -   Watch video on Youtube : []()
+    -   Related package presented :
+        [{fusen}](https://github.com/thinkr-open/fusen)
+
+-   [2020-10 - Development workflow at ThinkR: PROPRE, DataOps and
     DevOps workflows -
     ecoinfoFAIR2020](https://github.com/statnmap/prez/blob/master/2020-10-ThinkR-development-workflow.pdf)
 
-  - [2020-02 - Transforming scattered analyses into a documented,
+-   [2020-02 - Transforming scattered analyses into a documented,
     reproducible and shareable workflow - FOSDEM
     Brussels](https://github.com/statnmap/prez/blob/master/2020-02_FOSDEM_Rochette_prez.pdf)
-    
-      - Watch video at FOSDEM 2020:
+
+    -   Watch video at FOSDEM 2020:
         <https://video.fosdem.org/2020/AW1.126/open_research_shareable_workflow.mp4>
-      - See related blog post (FR) :
+    -   See related blog post (FR) :
         <https://thinkr.fr/transformer-plusieurs-scripts-eparpilles-en-beau-package-r/>
 
-  - [2019-07 - The “Rmd first” method: when projects start with
+-   [2019-07 - The “Rmd first” method: when projects start with
     documentation - useR
     Toulouse](https://github.com/statnmap/prez/blob/master/2019-07_useR_Toulouse.pdf)
-    
-      - See this blog post:
+
+    -   See this blog post:
         <https://rtask.thinkr.fr/rmd-first-when-development-starts-with-documentation>
-      - Watch video on Youtube: <https://youtu.be/cB1BCxFbhtk>
+    -   Watch video on Youtube: <https://youtu.be/cB1BCxFbhtk>
 
-  - [2019-02 - Everything but maps with spatial tools - SatRday Paris
+-   [2019-02 - Everything but maps with spatial tools - SatRday Paris
     (EN)](https://github.com/statnmap/prez/blob/master/2019-02-22_SatRdays_Paris.pdf)
-    
-      - Watch video on Youtube: <https://youtu.be/Gwb1aeD_sVs>
 
-  - [2018-07 - Les SIG et la cartographie avec R - Rencontres R
+    -   Watch video on Youtube: <https://youtu.be/Gwb1aeD_sVs>
+
+-   [2018-07 - Les SIG et la cartographie avec R - Rencontres R
     (FR)](https://github.com/statnmap/prez/blob/master/2018-07-06_RR2018_Statnmap.pdf)
-    
-      - See this blog post (FR & EN) for this presentation:
+
+    -   See this blog post (FR & EN) for this presentation:
         <https://statnmap.com/2018-07-14-introduction-to-mapping-with-sf-and-co/>

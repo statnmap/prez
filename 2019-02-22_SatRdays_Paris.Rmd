@@ -1,0 +1,1013 @@
+---
+title: "Everything but maps<br/>with spatial tools"
+subtitle: "<i>SatRday Paris 2019</i>"
+author: "Sébastien Rochette"
+date: ""
+output: 
+  formation::chapitre:
+    css: prez.css
+    footer: "Sébastien Rochette (@statnmap) - SatRday Paris 2019"
+    url: "https://rtask.thinkr.fr"
+    seal: false
+    add_footer_chapitre: false
+---
+class: center middle inverse title-slide
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  cache = TRUE # name chunks !
+)
+# extra
+# remotes::install_github("lockedata/namer")
+# namer::name_chunks()
+# xaringan::summon_remark(version = "latest", to = "libs/")
+# pagedown::chrome_print(url = "satrday_paris.html", output = xfun::with_ext(url, "pdf"),
+#     extra_args = c("--disable-gpu"), verbose = TRUE)
+
+```
+.top_left[
+```{r satrday-paris-1, echo=FALSE, out.width="50%"}
+knitr::include_graphics("img/logo.png")
+```
+]
+# Everything but maps<br/>with spatial tools
+
+## _SatRday Paris 2019_  
+
+### Sébastien Rochette 
+
+---
+
+layout:true
+.top_right[![](img/hex_thinkr.png)]
+.remark-slide-number-left[`r '\u200B'`]
+
+---
+class: slide
+
+```{r packages, include=FALSE}
+# devtools::install_github("rspatial/raster")
+# devtools::install_github("rspatial/terra")
+# original: https://github.com/davidcsterratt/RImageJROI
+# remotes::install_github("statnmap/RImageJROI")
+# remotes::install_github("statnmap/deeptools")
+# remotes::install_github("r-spatial/leafgl")
+# remotes::install_github("tylermorganwall/rayshader")
+library(ggplot2)
+library(raster)
+library(dplyr)
+library(glue)
+library(RImageJROI)
+library(terra)
+library(deeptools)
+library(sf)
+library(rasterVis)
+library(purrr)
+library(scales)
+library(leaflet)
+library(leafgl)
+library(rgl)
+library(rayshader)
+
+# Source functions for this presentation
+source("satrday_paris_supp/utils_satrday_paris.R")
+# Render in PDF
+if (FALSE) {
+  webshot::webshot("satrday_paris.html",
+                   "satrday_paris.pdf"
+  )
+}
+```
+
+
+
+### What are spatial data ?
+
+Images of the world:
+
+- Data associated with a position using coordinates
+- Position on Earth is X/Y (long/lat): Earth is flat `r emo::ji("thinking")`
+
+.pull-left[
+```{r satrday-paris-2}
+knitr::include_graphics("img/flat_earth.jpeg")
+```
+]
+.pull-right[
+```{r satrday-paris-3}
+knitr::include_graphics("img/2018-04-18-draw-maps-like-paintings_header.jpeg")
+```
+]
+
+---
+class: slide
+
+### What are spatial data ?
+
+.pull-left[
+Images of the world:
+
+- Rasters: grids
+- Vectors: points, lines, polygons
+`r glue::glue_collapse(rep("<br/>", 8))`
+  
+> https://2012books.lardbucket.org/books/geographic-information-system-basics/s11-02-multiple-layer-analysis.html
+
+]
+.pull-right[
+```{r satrday-paris-4, out.width="360px"}
+knitr::include_graphics("img/spatial-objects-rasters-vectors.jpg")
+```
+]
+
+
+---
+class: slide
+### I have a problem
+
+```{r satrday-paris-5, out.width='50%'}
+knitr::include_graphics("img/sixth_sense_rasters.jpeg")
+```
+
+---
+class: slide
+
+### I have a problem
+
+**An image is a raster**
+
+- Read with {raster}, {terra} (=future of {raster} with C++) or {stars}
+    + Rely on "GDAL" library: <https://gdal.org/>
+
+.pull-left-70[
+```{r raster-plot, echo=TRUE, eval=FALSE}
+img <- here::here("satrday_paris_supp", "Proj_2015-01-13_MBD_dis_indent_A_T0.png")
+# raster
+r_raster <- raster::stack(img)
+raster:::plotRGB(r_raster)
+# terra
+r_png <- png::readPNG(img)
+  r_terra <- terra::rast(r_png)
+pal <- colorRampPalette(c("black", "green"))(10)
+image(r_terra, 2, col = pal, asp = 1)
+
+# stars
+r_stars <- stars::read_stars(img)
+stars:::image.stars(r_stars, rgb = 1:3)
+```
+]
+.pull-right-30[
+```{r satrday-paris-6, ref.label="raster-plot", out.width="75%", echo=FALSE}
+raster:::plotRGB(r_raster)
+image(r_terra, 2, col = colorRampPalette(c("black", "green"))(10), asp = 1)
+stars:::image.stars(r_stars, rgb = 1:3)
+```
+]
+
+---
+class: slide
+
+### Matrices are rasters
+
+**How to use geostatistical indices to compare matrices 1D+time correlation?**
+
+- Work with [cell biologist, Dr Rainer Waadt](https://www.cos.uni-heidelberg.de/index.php/r.waadt?l=_e)
+    + Imaging of calcium and abscisic acid signal in roots
+    + Data from [Waadt _et al._, 2017](https://doi.org/10.1111/nph.14706)
+    + Data in Excel file (one column for each time step)
+    
+```{r satrday-paris-6-5, out.width="45%"}
+knitr::include_graphics("satrday_paris_supp/rainer_roots.png")
+```
+    
+> Waadt, R. , Krebs, M. , Kudla, J. and Schumacher, K. (2017), Multiparameter imaging of calcium and abscisic acid and high‐resolution quantitative calcium measurements using R‐GECO1‐mTurquoise in Arabidopsis. New Phytol, 216: 303-320. [doi:10.1111/nph.14706](https://doi.org/10.1111/nph.14706)    
+
+---
+class: slide
+
+### Matrices are rasters
+
+**How to use geostatistical indices to compare matrices 1D+time correlation?**
+
+- Work with [cell biologist, Dr Rainer Waadt](https://www.cos.uni-heidelberg.de/index.php/r.waadt?l=_e)
+    + Imaging of calcium and abscisic acid signal in roots
+    + Data from [Waadt _et al._, 2017](https://doi.org/10.1111/nph.14706)
+    + Data in Excel file (one column for each time step)
+    
+```{r satrday-paris-7, out.width="80%"}
+knitr::include_graphics("img/R-GECO1_t0-t46.png")
+```
+    
+<br/>
+> Waadt, R. , Krebs, M. , Kudla, J. and Schumacher, K. (2017), Multiparameter imaging of calcium and abscisic acid and high‐resolution quantitative calcium measurements using R‐GECO1‐mTurquoise in Arabidopsis. New Phytol, 216: 303-320. [doi:10.1111/nph.14706](https://doi.org/10.1111/nph.14706)    
+
+---
+class: slide
+
+### Matrices are rasters
+
+**How to use geostatistical indices to compare matrices 1D+time correlation?**
+
+- Transform each matrix as raster: `raster::raster`/`terra::rast`
+    + Combine as `raster::stack`/`terra::rast`
+- Correlation in space and time. {raster/terra}::`focal`
+    + [Blog post on correlation between (real) rasters](https://statnmap.com/2018-01-27-spatial-correlation-between-rasters/)
+
+    
+```{r satrday-paris-8}
+r_file <- here::here("satrday_paris_supp/HM_raster_corr.grd")
+if (!file.exists(r_file)) {
+  # Read list of files with information
+  tbl_rest <- readr::read_rds(here::here("satrday_paris_supp/tbl_rest_reduce.rds"))
+  path <- here::here("satrday_paris_supp")
+  # Convert to raster
+  HM_raster <- csvmatrix_as_rasters("satrday_paris_supp", tbl_rest)
+  # Calculate correlation
+  HM_raster_corr <- calc_correlation(HM_raster, w = matrix(1,5,7), layer1 = 1, layer2 = 2)
+
+  writeRaster(HM_raster_corr, r_file)
+} else {
+  HM_raster_corr <- stack(r_file)
+}
+```
+
+```{r satrday-paris-9, out.width="65%"}
+rgg <- SDMSelect::gplot_data(HM_raster_corr, maxpixels = 0.5e6)
+ggplot(rgg) +
+  geom_tile(aes(x, y, fill = value)) +
+  scale_fill_gradient2("Cor", low = '#2166ac', high = '#b2182b', midpoint = 0, mid = "#f7f7f7") +
+  geom_vline(xintercept = c(0, 40)) +
+  facet_wrap(~ variable) +
+  xlab("Time") +
+  ylab("Position")
+```
+
+
+---
+class: slide
+
+### Microscopy images are rasters
+
+.pull-left[
+**How to use geostatistical indices to compare image fluorescence of plant cells?**
+
+- Work with [bio-image data scientist, Dr Marion Louveaux](https://marionlouveaux.fr)
+    + Shoot Apical Meristem of _Arabidopsis Thaliana_
+    + Confocal microscopy live imaging
+    + ROI manager of [ImageJ/Fiji](http://fiji.sc/)
+
+<br/><br/>
+[https://marionlouveaux.fr](https://marionlouveaux.fr)  
+> Louveaux, M., Rochette, S., Beauzamy, L., Boudaoud, A. and Hamant, O. (2016), The impact of mechanical compression on cortical microtubules in Arabidopsis: a quantitative pipeline. Plant J. Volume88, Issue2. 328-342. [doi:10.1111/tpj.13290](http://onlinelibrary.wiley.com/doi/10.1111/tpj.13290/full)
+
+]
+.pull-right[
+```{r satrday-paris-10, echo=FALSE, out.width="50%"}
+knitr::include_graphics("img/Proj_2015-01-13_MBD_dis_indent_A_T0.png")
+```
+
+```{r imagej2r, out.width="95%"}
+# Read data ----
+imgT0 <- get_data_r_roi("satrday_paris_supp", "Proj_2015-01-13_MBD_dis_indent_A_T0")
+# Plot
+rgg <- SDMSelect::gplot_data(raster(imgT0$raster, 2), maxpixels = 0.5e6)
+ggplot(rgg) +
+  geom_tile(aes(x, y, fill = value)) +
+  scale_fill_gradient("fluo", low = "#000000", high = "#00FF22") +
+  geom_sf(data = imgT0$polygons, colour = "red", fill = NA) +
+  coord_sf(crs = sf::st_crs(imgT0$polygons),
+           datum = sf::st_crs(imgT0$polygons)) +
+  ggtitle("Image and ROI read in R")
+
+```
+]
+
+---
+class: slide
+
+### Microscopy images are rasters
+
+**How to use geostatistical indices to compare image fluorescence of plant cells?**
+
+- Read Fiji/imageJ ROI polygons: [{RImageJROI}](https://github.com/davidcsterratt/RImageJROI)
+    + Fork [statnmap/RImageJROI to {sf}](https://github.com/statnmap/RImageJROI): `ijzip_as_sf`
+- Calculate spatial autocorrelation indices (Moran, Geary): `raster::GearyLocal`
+- Separate pixels for each {sf}-cell: `raster::extract`
+
+.pull-left[
+```{r satrday-paris-11, fig.width=5.5, fig.height=6, out.width="80%"}
+imgT0 <- get_data_r_roi("satrday_paris_supp", "Proj_2015-01-13_MBD_dis_indent_A_T0")
+# Plot
+rgg0 <- SDMSelect::gplot_data(raster(imgT0$raster_crop, 2), maxpixels = 0.5e6)
+ggplot(rgg0) +
+  geom_tile(aes(x, y, fill = value)) +
+  scale_fill_gradient("fluo", low = "#000000", high = "#00FF22") +
+  geom_sf(data = imgT0$polygons, colour = "red", fill = NA) +
+  coord_sf(crs = sf::st_crs(imgT0$polygons),
+           datum = sf::st_crs(imgT0$polygons)) +
+  ggtitle("Meristem before micro-compression")
+```
+]
+.pull-right[
+```{r satrday-paris-12, fig.width=5.5, fig.height=6, out.width="80%"}
+imgT6h30 <- get_data_r_roi("satrday_paris_supp", "Proj_2015-01-13_MBD_dis_indent_A_T6h30")
+# Plot
+rgg6 <- SDMSelect::gplot_data(raster(imgT6h30$raster_crop, 2), maxpixels = 0.5e6)
+ggplot(rgg6) +
+  geom_tile(aes(x, y, fill = value)) +
+  scale_fill_gradient("fluo", low = "#000000", high = "#00FF22") +
+  geom_sf(data = imgT6h30$polygons, colour = "red", fill = NA) +
+  coord_sf(crs = sf::st_crs(imgT6h30$polygons),
+           datum = sf::st_crs(imgT6h30$polygons)) +
+  ggtitle("Meristem 6h30 after micro-compression")
+```
+]
+
+---
+class: slide
+
+### Microscopy images are rasters
+
+**How to use geostatistical indices to compare image fluorescence of plant cells?**
+
+- Compare indices through time
+    + If needed with mask: {raster/terra}::`mask`
+
+[*Louveaux et al. (2016)*](http://onlinelibrary.wiley.com/doi/10.1111/tpj.13290/full)
+```{r satrday-paris-13, echo=FALSE}
+knitr::include_graphics("img/TEST_Ex3_raw_thd40_test.png")
+```
+
+
+```{r satrday-paris-14, eval=FALSE}
+# Layer 2
+get_indices <- function(x) {
+  values_by_polygon <- raster(x$raster_crop, 2) %>% extract(x$polygons) 
+  all_means <- purrr::map_dbl(values_by_polygon, mean, na.rm = TRUE)
+  # GearyLocal
+  geary_by_polygon <- raster(x$raster_crop, 2) %>% GearyLocal() %>% extract(x$polygons)
+  all_geary <- purrr::map_dbl(geary_by_polygon, mean, na.rm = TRUE)
+  
+  tibble(all_means, all_geary) %>% 
+    tidyr::gather(key = "indices", value = "value") 
+}
+
+imgT0_indices <- get_indices(imgT0) %>% 
+  mutate()
+ggplot(imgT0_indices) +
+  geom_violin(aes(indices, value), draw_quantiles = 0.5) +
+  facet_wrap(vars(indices), ncol = 2, scales = "free") +
+  xlab("") + ylab("")
+
+```
+
+---
+class: slide
+
+### Images user annotations are spatial data
+
+
+.pull-left[
+**How to gather and summarise user image annotations?**
+
+- Work with [marine scientist, Dr Marjolaine Matabos](https://annuaire.ifremer.fr/cv/20350/)
+  + Images from the subsea geysers located at 1700 m depth in the Atlantic and Pacific Oceans
+  + Deep-sea Spy project ([https://www.deepseaspy.com, Ifremer](https://www.deepseaspy.com))
+  + Video game with public annotation
+
+```{r satrday-paris-15, echo=FALSE, out.width="80%"}
+knitr::include_graphics("img/Especes.jpg")
+```
+
+]
+.pull-right[
+```{r satrday-paris-16, echo=FALSE, out.width="50%"}
+knitr::include_graphics("img/Ifremer_Tuile_Jeu_S.jpg")
+```
+```{r satrday-paris-17, echo=FALSE, out.width="100%"}
+knitr::include_graphics("img/deepseaspy_game.png")
+```
+]
+
+---
+class: slide
+
+### Images user annotations are spatial data
+
+.pull-left[
+**How to gather and summarise user image annotations?**
+
+- Read database and extract spatial features (points, lines, polygons): {sf}
+- Account for uncertain position
+    + Rasterize voronoi separation of space of each individual: `sf::st_voronoi`, `raster::rasterize`
+
+]
+.pull-right[
+```{r satrday-paris-18, fig.width=7, fig.height=4}
+ONC2_bucc_carto <- readr::read_rds(system.file("outputs/ONC2_bucc_carto.rds", package = "deeptools"))
+
+gg_users_image(x = ONC2_bucc_carto,
+               image_id = 10681, buffer = 10) +
+  ggtitle("All users annotations for image 10681")
+```
+]
+
+```{r satrday-paris-19, fig.width=15, fig.height=4}
+# Choose one image for one user
+image_id <- "10681"
+user_id <- "user00205-100"
+
+bucc_image_user <- ONC2_bucc_carto %>% 
+  dplyr::filter(image_id == !!image_id,
+                user_id == !!user_id)
+
+r_image <- raster(bucc_image_user, res = 0.5)
+dist_buffer <- 10
+
+# Calculate voronoi for one user_id
+image_user_intermediates <- voronoi_rasterize(
+  x = bucc_image_user,
+  dist_buffer = dist_buffer,
+  r_image = r_image,
+  keep_intermediate = TRUE)
+
+# Show intermediate steps
+p1 <- ggplot(image_user_intermediates$points_in_voronoi) +
+  geom_sf(aes(fill = image_pol_id)) +
+  geom_sf(data = st_cast(st_geometry(bucc_image_user), "POINT"), size = 0.25) +
+  theme_images(x = image_user_intermediates$points_in_voronoi, fill = "c", color = NULL) +
+  ggtitle("Separate individuals observed by one user")
+
+p3 <- gplot(image_user_intermediates$voronoi_in_buffer_as_raster) +
+  geom_tile(aes(fill = value)) +
+  theme_images(x = image_user_intermediates$points_in_voronoi, fill = "c", color = NULL, na.value = NA) +
+  ggtitle("Reduce space to reasonable uncertainty")
+
+cowplot::plot_grid(plotlist = list(p1, p3), ncol = 2)
+```
+
+---
+class: slide
+
+### Images user annotations are spatial data
+
+**How to gather and summarise user image annotations?**
+
+- Super-impose rasters of users
+- **Find individuals in common**
+
+```{r satrday-paris-20, fig.width=12, fig.height=7, out.width="90%"}
+# Add group names in image_sf
+bucc_image_grouped <- ONC2_bucc_carto %>% 
+  find_groups_in_image(image_id = "10681")
+
+# Create specific image with group names
+bucc_image_grouped_groups <- bucc_image_grouped %>% 
+  group_by(group_kept) %>% 
+  summarize() %>% 
+  st_centroid() %>% 
+  cbind(st_coordinates(.))
+
+ggplot(bucc_image_grouped %>% 
+         mutate(group_kept = 
+         forcats::fct_reorder(group_kept, desc(n_pols)))
+       ) +
+    geom_sf(aes(color = group_kept),
+      show.legend = "line",
+      size = 2 #alpha = 0.1
+    ) +
+  ggrepel::geom_text_repel(
+    data = bucc_image_grouped_groups,
+    aes(x = X, y = Y, label = group_kept)) +
+    theme_images(x = bucc_image_grouped, fill = NULL, color = "d", na.value = "grey20") +
+  guides(color = FALSE) +
+  ggtitle("Identification of groups of marked individuals")
+```
+
+---
+class: slide
+
+### Rasters are polygons
+
+**How to render interactive grid quickly?**
+
+.pull-left[
+- *Confidential work...* 
+  + Let's find an equivalent case !
+
+
+- Imagine: "The World largest waffle"
+  + How to explore the quantity of chocolate in each square ?
+- Interactive plot in a ShinyApp
+  + Millions of cells
+  + Quick print and easy exploration
+]
+.pull-right[
+```{r satrday-paris-21}
+knitr::include_graphics("img/martha-friedman-waffle.jpg")
+```
+```{r satrday-paris-22}
+knitr::include_graphics("img/gauffre_chocolat.jpg")
+```
+]
+
+---
+class: slide
+
+### Rasters are polygons (waffles too...)
+
+**How to render interactive grid quickly?**
+
+.pull-left[
+- Build a heart polygon waffle with {sf}
+  + Create regular grid from polygon: `st_sample`
+  + Generate more or less chocolate
+  + Create polygon grid with correct `crs` to avoid deformation on leaflet
+]
+.pull-right[
+```{r satrday-paris-23, out.width="40%"}
+knitr::include_graphics("img/waffle_heart.jpeg")
+```
+]
+```{r satrday-paris-24, out.width="100%", fig.width=14, fig.height=5}
+# Source point to polygon
+source("satrday_paris_supp/generate_polygon_from_grid_point.R")
+
+# Construct heart (code from @dmarcelinobr)
+xhrt <- function(t) 16 * sin(t)^3
+yhrt <- function(t) 13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t)
+
+# create heart as polygon
+heart_sf <- tibble(t = seq(0, 2 * pi, by = .1)) %>%
+  mutate(y = yhrt(t),
+         x = xhrt(t)) %>% 
+  bind_rows(., head(., 1)) %>% 
+  select(x, y) %>% 
+  as.matrix() %>% 
+  list() %>% st_polygon() %>% 
+  st_sfc(crs = 2154)
+
+g1 <- ggplot(heart_sf) +
+  geom_sf(fill = "#cb181d") +
+  coord_sf(crs = 2154, datum = 2154) +
+  ggtitle("Heart sf polygon")
+  
+# create grid
+heart_grid <- st_sample(heart_sf, size = 500, type = "regular") %>% 
+  cbind(as.data.frame(st_coordinates(.))) %>% 
+  rename(x = X, y = Y) %>% 
+  st_sf() %>% 
+  mutate(z = cos(2*x) - cos(x) + sin(y),
+         z_text = as.character(round(z)))
+    
+g2 <- ggplot(heart_grid) +
+  geom_sf(colour = "#cb181d") +
+  coord_sf(crs = 2154, datum = 2154) +
+  ggtitle("Heart as regular point grid")
+
+g3 <- ggplot(heart_grid) +
+  geom_sf(aes(colour = z), size = 2) +
+  scale_colour_distiller(palette = "YlOrBr", type = "seq", direction = 1) +
+  theme(panel.background = element_rect(fill = "#000000")) +
+  coord_sf(crs = 2154, datum = 2154) +
+  guides(colour = FALSE) +
+  ggtitle("Chocolate quantity for each point")
+
+# Generate a grid polygon from points
+heart_polygon <- wafflerize(heart_grid, fact = 1000)
+
+g4 <- ggplot(heart_polygon) +
+  geom_sf(aes(fill = z), colour = NA) +
+  scale_fill_distiller(palette = "YlOrBr", type = "seq", direction = 1) +
+  theme(panel.background = element_rect(fill = "#000000")) +
+  coord_sf(crs = 4326, datum = 4326) +
+  guides(fill = FALSE) +
+  ggtitle("Chocolate quantity in each cell")
+
+cowplot::plot_grid(g1, g2, g3, g4, ncol = 4)
+
+```
+
+---
+class: slide
+
+### Rasters are polygons (waffles too...)
+
+**How to render interactive grid quickly?**
+
+- Build a heart polygon waffle with {sf}
+  + Create regular grid from polygon: `st_sample`
+  + Generate more or less chocolate
+  + Create polygon grid with correct `crs` to avoid deformation on leaflet
+  + Quick print with {leafgl} (*prev. {leaflet.glify}*): `addGlPolygons`
+  
+```{r satrday-paris-25, eval=FALSE}
+# Define colors for `addGlPolygons`
+cols <- brewer_pal(palette = "YlOrBr", type = "seq")(7)
+colours <- gradient_n_pal(cols)(rescale(heart_polygon$z))
+colours_rgb <- (t(col2rgb(colours, alpha = FALSE))/255) %>% as.data.frame()
+
+# Render as leaflet
+m <- leaflet() %>%
+  # addPolygons(data = heart_polygon) %>% 
+  # addGlPolygons(data = heart_polygon, 
+  #               color = colours_rgb,
+  #               popup = "z_text",
+  #               opacity = 1) %>% 
+    leaflet.glify::addGlifyPolygons(data = heart_polygon, 
+                color = colours_rgb,
+                popup = "z_text",
+                opacity = 1) %>% 
+  setView(lng = mean(st_bbox(heart_polygon)[c(1,3)]),
+          lat = mean(st_bbox(heart_polygon)[c(2,4)]), zoom = 10)
+
+```
+
+.pull-left[
+*Low resolution leaflet polygons*
+```{r satrday-paris-26}
+knitr::include_graphics("img/leaflet_heart.png")
+```
+]
+.pull-right[
+*High resolution leaflet polygons*
+```{r satrday-paris-27}
+knitr::include_graphics("img/leaflet_heart_big.png")
+```
+]
+
+---
+class: slide
+
+### Rasters are polygons (waffles too...)
+
+**How to render interactive grid quickly?**
+
+- Build a heart polygon waffle with {sf}
+  + Create regular grid from polygon: `st_sample`
+  + Generate more or less chocolate
+  + Create polygon grid with correct `crs` to avoid deformation on leaflet
+  + Quick print with {leafgl} (*prev. {leaflet.glify}*): `addGlPolygons`
+  
+.pull-left[
+```{r satrday-paris-28}
+knitr::include_graphics("img/leaflet_heart_big.png")
+```
+]
+.pull-right[
+```{r satrday-paris-29}
+knitr::include_graphics("img/gaufre-au-caramel-beurre-sale.jpg")
+```
+]
+
+---
+class: slide
+
+### Images are 3D elevation data
+
+.pull-left[
+- Rasters are commonly used for terrain elevation
+- Imagine images as 3D elevation data
+- Transform rasters and sf object into [{rayshader}](https://github.com/tylermorganwall/rayshader) visualisation
+  + 2D with overlay layer and polygons: `plot_map`
+
+<br/><br/><br/>
+> Rochette S. (2016, Aug. 02). "Rshiny expert image comparison app". Retrieved from https://statnmap.com/2016-08-02-rshiny-expert-image-comparison-app/.  
+> Rochette S. (2018, Oct. 28). "Play with spatial tools on 3D cells images". Retrieved from https://statnmap.com/2018-10-28-play-with-spatial-tools-on-3d-cells-images/.
+
+]
+.pull-right[
+```{r satrday-paris-30, out.width="75%"}
+# adapted from https://statnmap.com/2016-08-02-rshiny-expert-image-comparison-app/
+# Read data with ROI ----
+imgT6h30 <- get_data_r_roi("satrday_paris_supp", "Proj_2015-01-13_MBD_dis_indent_A_T6h30")
+# Get green layer of the rgb image of a meristem under fluorescence
+r3D <- raster(imgT6h30$raster_crop, 2)
+# Plot
+rgg <- SDMSelect::gplot_data(r3D, maxpixels = 0.5e6)
+ggplot(rgg) +
+  geom_tile(aes(x, y, fill = value)) +
+  scale_fill_gradient("fluo", low = "#000000", high = "#00FF22") +
+  geom_sf(data = imgT6h30$polygons, colour = "white", fill = NA) +
+  coord_sf(crs = sf::st_crs(imgT6h30$polygons),
+           datum = sf::st_crs(imgT6h30$polygons)) +
+  ggtitle("Image and ROI read in R")
+```
+
+```{r satrday-paris-31}
+# Rayshader on raster objects and overlay sf objects
+source("satrday_paris_supp/rayshader_on_raster.R")
+
+zscale <- 10
+# raster
+r_ray <- stack_to_ray(image = imgT6h30$raster_crop,
+                      elevation = raster(imgT6h30$raster_crop, 2))
+# objects to add over raster
+pol_coords <- sf_proj_as_ray(r = imgT6h30$raster_crop, 
+                             sf = select(imgT6h30$polygons, -X, -Y),
+                             z_pos = 150, zscale = zscale,
+                             as_sf = TRUE, groups = TRUE)
+
+# Rayshade raster
+ambmat <- ambient_shade(r_ray$elevation, zscale = 30)
+raymat <- ray_shade(r_ray$elevation, zscale = 30, lambert = TRUE)
+# watermap <- detect_water(datamat, cutoff = 1-(200/255), min_area = 5)
+
+ray_image <- r_ray$elevation %>%
+  sphere_shade(texture = "imhof4") %>%
+  add_overlay(r_ray$overlay, alphalayer = 0.99) %>% # Note overlay
+  add_shadow(raymat, max_darken = 0.5) %>%
+  add_shadow(ambmat, max_darken = 0.5) #%>%
+  # add_water(watermap, color = "#57B6FF") 
+```
+
+*Plot rayshaded raster with overlay*
+```{r satrday-paris-32, out.width="85%"}
+# plot rayshader in 2D
+plot_map(ray_image)
+plot(pol_coords$sf, col = NA, border = "white", add = TRUE, reset = FALSE)
+```
+]
+
+---
+class: slide
+
+### Images are 3D elevation data
+
+.pull-left[
+- Rasters are commonly used for terrain elevation
+- Imagine images as 3D elevation data
+- Transform rasters and sf object into [{rayshader}](https://github.com/tylermorganwall/rayshader) visualisation
+  + 3D with overlay layer and polygons: `plot_3d` + `lines3d`
+
+<br/><br/><br/>
+> Rochette S. (2016, Aug. 02). "Rshiny expert image comparison app". Retrieved from https://statnmap.com/2016-08-02-rshiny-expert-image-comparison-app/.  
+> Rochette S. (2018, Oct. 28). "Play with spatial tools on 3D cells images". Retrieved from https://statnmap.com/2018-10-28-play-with-spatial-tools-on-3d-cells-images/.
+
+]
+.pull-right[
+```{r satrday-paris-33}
+# Create gif
+if (!file.exists(file.path("satrday_paris_supp", "meristem.gif"))) {
+  # generate .png frame images
+  n_frames <- nrow(pol_coords$coords)
+  dir.create("satrday_paris_supp/meristem_gif", showWarnings = FALSE)
+  img_frames <- file.path("satrday_paris_supp/meristem_gif",
+                          paste0("meristem", 
+                                 formatC(seq_len(n_frames), width = 3, flag = "0"),
+                                 ".png"))
+  
+  # add polygons 
+  for (i in seq_len(n_frames)) {
+    # plot rayshader in 3D (Need to be set inside the loop)
+    ray_image %>% 
+      plot_3d(r_ray$elevation, zscale = zscale, windowsize = c(500, 500), #c(1200, 1000),
+              soliddepth = -max(r_ray$elevation, na.rm = TRUE)/zscale,
+              water = TRUE, wateralpha = 0,
+              theta = 25, phi = 30, zoom = 0.3, fov = 60)
+    
+    
+    # purrr::walk(1:nrow(pol_coords$coords),
+    #        function(i) lines3d(pol_coords$coords$coords[[i]],
+    #                            col = "white", add = TRUE, lwd = 10))
+    purrr::walk(1:i,
+                function(i) lines3d(pol_coords$coords$coords[[i]],
+                                    col = "white", add = TRUE, lwd = 5))
+    # lines3d(pol_coords$coords$coords[[i]],
+    #         col = "white", add = TRUE, lwd = 10)
+    
+    # render_snapshot(img_frames[i])
+    rgl::snapshot3d(img_frames[i])
+    rgl::clear3d()
+  }
+  rgl::rgl.close()
+  
+  magick::image_write_gif(magick::image_read(img_frames), 
+                          path = file.path("satrday_paris_supp", "meristem.gif"), 
+                          delay = 6/n_frames)
+}
+```
+```{r satrday-paris-34, echo=FALSE}
+knitr::include_graphics(file.path("satrday_paris_supp", "meristem.gif"))
+```
+]
+
+---
+class: slide
+
+### Images are 3D elevation data
+
+.pull-left[
+- Extract elevation using [{isoband}](https://github.com/clauswilke/isoband)
+- Rayshade this with [@rayshaderbot](https://twitter.com/rayshaderbot) !
+
+<https://twitter.com/rayshaderbot>
+
+```{r satrday-paris-35}
+knitr::include_graphics("satrday_paris_supp/rayshaderbot.png")
+```
+]
+.pull-right[
+
+
+<https://twitter.com/rayshaderbot/status/1092308176672837632?s=19>
+```{r satrday-paris-36, out.width = "55%"}
+
+knitr::include_graphics("satrday_paris_supp/rayshade_me1.png")
+knitr::include_graphics("satrday_paris_supp/rayshade_me2.png")
+```
+]
+
+---
+class: slide
+
+### 3D mesh are raster elevation data
+
+- Read .ply mesh 3D files: {mgx2r} `read_mgxPly`
+- Interpolate surface based on vertices
+- Rayshade this !
+
+.pull-left[
+```{r ply-raster, results="hide"}
+filePly <- system.file("extdata", "full/mesh/mesh_meristem_full_T0.ply", package = "mgx2r")
+
+myMesh <- mgx2r::read_mgxPly(
+  file = filePly, ShowSpecimen = FALSE, addNormals = TRUE,
+  MatCol = 1, header_max = 30)
+
+wire3d(myMesh)
+par3d(windowRect = c(0, 0, 600, 600))
+view3d(theta = 30, phi = -40, zoom = 0.4)
+rgl::snapshot3d("satrday_paris_supp/mesh3d-meristem.png")
+rgl::rgl.close()
+
+```
+```{r ply-raster-img, out.width="80%"}
+knitr::include_graphics("satrday_paris_supp/mesh3d-meristem.png")
+```
+]
+.pull-right[
+```{r mesh3d-interp, eval=FALSE}
+# Not perfectly working
+# See: https://statnmap.com/2018-10-28-play-with-spatial-tools-on-3d-cells-images
+myMesh_r <- mesh3d_to_raster(myMesh, nrows = 500, ncols = 500, plot = FALSE,
+                             focal.d = 3, focal.p = 0.01, focal.ngb = 5, 
+                             focal.only = FALSE,
+                             gauss = FALSE, gauss.d = c(0.5, 0.75),
+                             method = "gam", gam.k = 10)
+
+  r_ray <- stack_to_ray(elevation = myMesh_r)
+  r_ray$elevation <- r_ray$elevation + abs(min(r_ray$elevation, na.rm = TRUE))
+  # range(r_ray$elevation, na.rm = TRUE)
+  # persp3d(r_ray$elevation)
+  # image(r_ray$elevation[200:210, 200:210])
+   # Rayshade raster
+  zscale <- 0.1
+  ambmat <- ambient_shade(r_ray$elevation, zscale = zscale)
+  raymat <- ray_shade(r_ray$elevation, zscale = zscale, lambert = TRUE,
+                      sunangle = 45)
+  
+  ray_image <- r_ray$elevation %>%
+    sphere_shade(texture = "unicorn") %>%
+    add_shadow(raymat, max_darken = 0.1) %>%
+    add_shadow(ambmat, max_darken = 0.5) # %>% 
+  # add_water(watermap, color = "#57B6FF") 
+  
+  plot_map(ray_image)
+  
+  ray_image %>% 
+    plot_3d(r_ray$elevation, zscale = zscale, windowsize = c(1000, 1000), #c(1200, 1000),
+            soliddepth = -max(r_ray$elevation, na.rm = TRUE)/zscale,
+            water = FALSE, waterdepth = water_levels[i],#70/zscale,
+            wateralpha = 0.5, watercolor = "lightblue",
+            waterlinecolor = "white", waterlinealpha = 0.5,
+            theta = 10, phi = 75, zoom = 0.55, fov = 60)
+```
+
+```{r mesh3d-interp-img, out.width="90%"}
+knitr::include_graphics("satrday_paris_supp/mesh-meristem.gif")
+```
+]
+> https://statnmap.com/2018-10-28-play-with-spatial-tools-on-3d-cells-images
+
+---
+class: slide
+
+### 3D mesh are raster elevation data
+
+- Go further ?
+
+```{r satrday-paris-38}
+if (!file.exists(file.path("satrday_paris_supp", "face.gif"))) {
+  # Read logo
+  r_img <- stack("satrday_paris_supp/ThinkR_logo_500px.png")
+  
+  # Get face from Rvcg
+  library(Rvcg)
+  data(humface)
+  
+  # plot3d(humface)
+  
+  humface_r <- mesh3d_to_raster(humface, nrows = nrow(r_img), ncols = ncol(r_img), plot = FALSE,
+                                focal.d = 3.5, focal.p = 1, focal.ngb = 100, 
+                                focal.only = FALSE,
+                                gauss = TRUE, gauss.d = c(0.5, 2),
+                                method = "gam", gam.k = 12) #0.75
+  
+  gplot(humface_r) +
+    geom_tile(aes(fill = value)) +
+    scale_fill_viridis_c()
+
+  # Create levels with ThinkR logo
+  # raster
+  r_ray <- stack_to_ray(elevation = humface_r, image = r_img)
+  # persp3d(r_ray$elevation)
+  # Rayshade raster
+  zscale <- 0.25
+  ambmat <- ambient_shade(r_ray$elevation, zscale = zscale)
+  raymat <- ray_shade(r_ray$elevation, zscale = zscale, lambert = TRUE)
+  
+  ray_image <- r_ray$elevation %>%
+    sphere_shade(texture = "imhof4") %>%
+    add_overlay(r_ray$overlay, alphalayer = 0.99) %>% # Note overlay
+    add_shadow(raymat, max_darken = 0.01) %>%
+    add_shadow(ambmat, max_darken = 0.5) # %>% 
+  # add_water(watermap, color = "#57B6FF") 
+  
+  plot_map(ray_image)
+  
+  # generate .png frame images
+  w_levels <- seq(0, max(r_ray$elevation, na.rm = TRUE)/zscale, length.out = 20)
+  water_levels <- c(rev(w_levels), w_levels)
+  n_frames <- length(water_levels)
+  dir.create("satrday_paris_supp/face_gif", showWarnings = FALSE)
+  img_frames <- file.path("satrday_paris_supp/face_gif",
+                          paste0("face", 
+                                 formatC(seq_len(n_frames), width = 3, flag = "0"),
+                                 ".png"))
+  
+  # add polygons 
+  for (i in seq_len(n_frames)) {
+    
+    ray_image %>% 
+      plot_3d(r_ray$elevation, zscale = zscale, windowsize = c(1000, 1000), #c(1200, 1000),
+              soliddepth = -max(r_ray$elevation, na.rm = TRUE)/zscale,
+              water = TRUE, waterdepth = water_levels[i],#70/zscale,
+              wateralpha = 0.5, watercolor = "lightblue",
+              waterlinecolor = "white", waterlinealpha = 0.5,
+              theta = 10, phi = 75, zoom = 0.55, fov = 60)
+    
+    rgl::snapshot3d(img_frames[i])
+    rgl::clear3d()
+  }
+  rgl::rgl.close()
+  
+  magick::image_write_gif(magick::image_read(img_frames), 
+                          path = file.path("satrday_paris_supp", "face.gif"), 
+                          delay = 6/n_frames)
+}
+```
+```{r satrday-paris-39, out.width="60%"}
+knitr::include_graphics("satrday_paris_supp/face.gif")
+```
+
+---
+class: slide
+
+### Do you also see rasters everywhere?
+
+.pull-left[
+- Matrices are rasters
+- Images are rasters
+- Image annotations are spatial polygons
+- Rasters are polygons
+- Images are 3D elevation data
+]
+.pull-right[
+```{r satrday-paris-37, out.width='50%'}
+knitr::include_graphics("img/sixth_sense_rasters.jpeg")
+```
+]
+
+.pull-left-30[
+**Thank you for your attention**
+
+See more: 
+
+- [statnmap.com](https://statnmap.com)
+- [marionlouveaux.com](https://marionlouveaux.com)
+- [rtask.thinkr.fr](https://rtask.thinkr.fr)
+- [deepseaspy.com](https://deepseaspy.com/)
+- [rayshader.com](https://rayshader.com/)
+
+]
+.pull-right-70[
+```{r satrday-paris-40, out.width="40%"}
+knitr::include_graphics("satrday_paris_supp/face.gif")
+```
+]
+> This presentation (github/statnmap/prez): <https://github.com/statnmap/prez/blob/master/2019-02-22_SatRdays_Paris.pdf>
+

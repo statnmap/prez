@@ -34,6 +34,7 @@ Here I store my presentations in conferences as PDF.
 - [2019-02 - Everything but maps with spatial tools - SatRday Paris (EN)](https://github.com/statnmap/prez/blob/master/2019-02-22_SatRdays_Paris.pdf)
 
   + Watch video on Youtube: https://youtu.be/Gwb1aeD_sVs
+  + Get the (not totally reproducible) [Rmd of the presentation](https://github.com/statnmap/prez/blob/master/2019-02-22_SatRdays_Paris.Rmd)
  
 - [2018-07 - Les SIG et la cartographie avec R - Rencontres R (FR)](https://github.com/statnmap/prez/blob/master/2018-07-06_RR2018_Statnmap.pdf)
   + See this blog post (FR & EN) for this presentation: <https://statnmap.com/2018-07-14-introduction-to-mapping-with-sf-and-co/>

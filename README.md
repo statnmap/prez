@@ -12,7 +12,7 @@ Here I store my presentations in conferences as PDF.
     -   Package build during presentation :
         [{squirrels.fusen}](https://github.com/statnmap/squirrels.fusen)
     -   List of questions and answers on HackMd : https://hackmd.io/2WEGjlnsTNa1-6k_ztAMZA?view
-    -   Watch video on Youtube : []()
+    -   Watch video on Youtube : https://www.youtube.com/watch?v=febuOcS70t4
     -   Related package presented :
         [{fusen}](https://github.com/thinkr-open/fusen)
 

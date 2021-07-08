@@ -5,13 +5,24 @@
 
 Here I store my presentations in conferences as PDF.
 
+-   [2021-07 - {fusen}: Créer un package R à partir de simples fichiers
+    Rmarkdown - Rencontres R
+    Paris](2021-07-12-creer-un-package-depuis-rmd-avec-fusen_RR2021.pdf)
+
+-   [2021-07 - Use {fusen} to write or upgrade a package - UseR
+    2021](https://github.com/statnmap/prez/blob/master/2021-07-use-fusen-to-write-or-upgrade-a-package.pdf)
+
+    -   Youtube video is available for UseR attendees there, starting at
+        22’40: <https://www.youtube.com/watch?v=NjM7sG1Lpc4>
+    -   Related package presented :
+        [{fusen}](https://github.com/thinkr-open/fusen)
+
 -   [2021-05 - How to build a package with the Rmd first method? -
     Hebrew R User Group
     Lille](https://github.com/statnmap/prez/blob/master/2021-05-how-to-build-package-rmd-first-fusen.pdf)
 
     -   Package build during presentation :
         [{squirrels.fusen}](https://github.com/statnmap/squirrels.fusen)
-    -   List of questions and answers on HackMd :
     -   Related package presented :
         [{fusen}](https://github.com/thinkr-open/fusen)
 

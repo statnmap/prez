@@ -5,6 +5,9 @@
 
 Here I store my presentations in conferences as PDF.
 
+- [2023-06 - {golem} and {fusen}: The winning combo for building robust,
+  easy-to-manage shiny applications](2023-06-22_RR2023_golem-fusen.pdf)
+
 - [2022-11 - Gestion de GitLab automatisée avec {gitlabr} - Meetup R
   Nantes](2022-11-21_gestion_de_gitlab_automatisee_avec_gitlabr.pdf)
 

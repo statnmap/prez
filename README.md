@@ -5,6 +5,9 @@
 
 Here I store my presentations in conferences as PDF.
 
+- [2023-11 - You may have already written a package and not even know
+  it](2023-11-17_you_may_have_already_written_a_package_and_not_even_know_it.pdf)
+
 - [2023-06 - {golem} and {fusen}: The winning combo for building robust,
   easy-to-manage shiny applications](2023-06-22_RR2023_golem-fusen.pdf)
 
